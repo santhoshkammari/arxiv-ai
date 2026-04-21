@@ -191,6 +191,8 @@ class StageA:
         self.output_file = output_dir / "stage_a.jsonl"
         self.max_workers = max_workers
         self._lock = threading.Lock()
+        # Truncate on init to avoid appending to stale data
+        self.output_file.write_text("")
 
     def _run_single_agent(self, paper: dict, prompt_template: str, schema, **fmt_kwargs) -> dict:
         prompt = prompt_template.format(
@@ -281,6 +283,7 @@ class StageB:
         self.agent = agent
         self.output_dir = output_dir
         self.output_file = output_dir / "stage_b.jsonl"
+        self.output_file.write_text("")  # truncate stale data
         self.pdf_dir = pdf_dir or output_dir / "pdfs"
         self.pdf_dir.mkdir(parents=True, exist_ok=True)
         self.max_debate_workers = max_debate_workers
@@ -461,7 +464,7 @@ class StageC:
     def __init__(self, agent: AIAgent, output_dir: Path):
         self.agent = agent
         self.output_dir = output_dir
-        self.report_file = output_dir / "report.md"
+        self.report_file = output_dir / "report.pdf"
 
     def _cluster(self, stage_a_results: list[StageAResult]) -> ClusterResult:
         papers_tags = "\n".join(
@@ -612,10 +615,39 @@ class StageC:
             deep_reviewed=len(stage_b_results),
         )
 
-        with open(self.report_file, "w") as f:
+        # Save markdown intermediate
+        md_file = self.output_dir / "report.md"
+        with open(md_file, "w") as f:
             f.write(report)
+
+        # Convert to PDF
+        self._markdown_to_pdf(report, self.report_file)
         logger.info(f"Stage C complete: report saved to {self.report_file}")
         return report
+
+    @staticmethod
+    def _markdown_to_pdf(md_text: str, pdf_path: Path):
+        """Convert markdown text to a styled PDF using fpdf2 with Unicode support."""
+        from fpdf import FPDF
+        from markdown_it import MarkdownIt
+
+        FONT_DIR = "/usr/share/fonts/truetype/dejavu"
+
+        pdf = FPDF()
+        pdf.set_auto_page_break(auto=True, margin=20)
+        pdf.add_font("DejaVu", "", f"{FONT_DIR}/DejaVuSans.ttf")
+        pdf.add_font("DejaVu", "B", f"{FONT_DIR}/DejaVuSans-Bold.ttf")
+        pdf.add_font("DejaVu", "I", f"{FONT_DIR}/DejaVuSans-Oblique.ttf")
+        pdf.add_font("DejaVu", "BI", f"{FONT_DIR}/DejaVuSans-BoldOblique.ttf")
+        pdf.add_page()
+        pdf.set_font("DejaVu", size=10)
+
+        md = MarkdownIt("commonmark", {"html": True}).enable("table")
+        html_body = md.render(md_text)
+
+        pdf.write_html(html_body)
+        pdf.output(str(pdf_path))
+        logger.info(f"  PDF rendered: {pdf_path} ({pdf_path.stat().st_size // 1024} KB)")
 
 
 # ── Pipeline Orchestrator ───────────────────────────────────────────────────
