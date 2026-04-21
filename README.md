@@ -1,4 +1,10 @@
- # Fetch today's papers from all CS categories → analyze → generate report.pdf
+ # ArXiv AI Analyzer
+
+An AI-powered tool that fetches papers from ArXiv, analyzes them using multi-agent debate, and generates a styled PDF report.
+
+## Quick Start
+
+Fetch today's papers from all CS categories → analyze → generate report.pdf
  python main.py --base-url http://192.168.170.76:8000/v1
  
  # Fetch last 3 days, only AI + CL categories, limit to 20 papers
