@@ -627,26 +627,165 @@ class StageC:
 
     @staticmethod
     def _markdown_to_pdf(md_text: str, pdf_path: Path):
-        """Convert markdown text to a styled PDF using fpdf2 with Unicode support."""
-        from fpdf import FPDF
+        """Convert markdown to a professional PDF using WeasyPrint."""
         from markdown_it import MarkdownIt
-
-        FONT_DIR = "/usr/share/fonts/truetype/dejavu"
-
-        pdf = FPDF()
-        pdf.set_auto_page_break(auto=True, margin=20)
-        pdf.add_font("DejaVu", "", f"{FONT_DIR}/DejaVuSans.ttf")
-        pdf.add_font("DejaVu", "B", f"{FONT_DIR}/DejaVuSans-Bold.ttf")
-        pdf.add_font("DejaVu", "I", f"{FONT_DIR}/DejaVuSans-Oblique.ttf")
-        pdf.add_font("DejaVu", "BI", f"{FONT_DIR}/DejaVuSans-BoldOblique.ttf")
-        pdf.add_page()
-        pdf.set_font("DejaVu", size=10)
+        from weasyprint import HTML, CSS
+        from weasyprint.text.fonts import FontConfiguration
 
         md = MarkdownIt("commonmark", {"html": True}).enable("table")
         html_body = md.render(md_text)
 
-        pdf.write_html(html_body)
-        pdf.output(str(pdf_path))
+        html_doc = f"""<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>ArXiv AI Daily Report</title>
+</head><body>{html_body}</body></html>"""
+
+        css = CSS(string="""
+        @page {{
+            size: A4;
+            margin: 2cm 2.5cm;
+            @bottom-center {{
+                content: counter(page);
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 9pt;
+                color: #666;
+            }}
+            @top-right {{
+                content: "ArXiv AI Report";
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 8pt;
+                color: #999;
+                font-style: italic;
+            }}
+        }}
+
+        @page :first {{
+            @bottom-center {{ content: none; }}
+            @top-right {{ content: none; }}
+        }}
+
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+
+        body {{
+            font-family: 'Georgia', 'Times New Roman', serif;
+            font-size: 10pt;
+            line-height: 1.6;
+            color: #1a1a1a;
+        }}
+
+        h1 {{
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 24pt;
+            color: #1a1a4e;
+            margin-top: 20pt;
+            margin-bottom: 10pt;
+            padding-bottom: 6pt;
+            border-bottom: 2pt solid #1a1a4e;
+            page-break-after: avoid;
+        }}
+
+        h2 {{
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 16pt;
+            color: #2d1b69;
+            margin-top: 22pt;
+            margin-bottom: 8pt;
+            padding-top: 8pt;
+            border-top: 1pt solid #e0e0e0;
+            page-break-after: avoid;
+        }}
+
+        h3 {{
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 12pt;
+            color: #333;
+            margin-top: 14pt;
+            margin-bottom: 6pt;
+            page-break-after: avoid;
+        }}
+
+        p {{
+            margin-bottom: 8pt;
+            text-align: justify;
+        }}
+
+        ul, ol {{
+            margin-left: 18pt;
+            margin-bottom: 10pt;
+        }}
+
+        li {{
+            margin-bottom: 4pt;
+        }}
+
+        blockquote {{
+            border-left: 3pt solid #6c3fba;
+            padding: 6pt 12pt;
+            margin: 10pt 0;
+            background: #faf8ff;
+            color: #444;
+            font-style: italic;
+        }}
+
+        code {{
+            background: #f4f4f4;
+            padding: 1pt 4pt;
+            border-radius: 2pt;
+            font-size: 9pt;
+            font-family: 'Courier New', monospace;
+        }}
+
+        pre {{
+            background: #f4f4f4;
+            padding: 8pt;
+            border-radius: 4pt;
+            font-size: 9pt;
+            margin: 8pt 0;
+            overflow-x: auto;
+        }}
+
+        strong {{
+            color: #1a1a2e;
+        }}
+
+        a {{
+            color: #0645ad;
+            text-decoration: none;
+        }}
+
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10pt 0;
+            font-size: 9pt;
+        }}
+
+        th {{
+            background: #1a1a4e;
+            color: white;
+            padding: 5pt 8pt;
+            text-align: left;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+        }}
+
+        td {{
+            padding: 4pt 8pt;
+            border-bottom: 1px solid #e0e0e0;
+        }}
+
+        tr:nth-child(even) td {{
+            background: #f5f5fa;
+        }}
+
+        hr {{
+            border: none;
+            border-top: 1pt solid #ccc;
+            margin: 16pt 0;
+        }}
+        """)
+
+        font_config = FontConfiguration()
+        HTML(string=html_doc).write_pdf(str(pdf_path), stylesheets=[css], font_config=font_config)
         logger.info(f"  PDF rendered: {pdf_path} ({pdf_path.stat().st_size // 1024} KB)")
 
 
