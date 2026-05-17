@@ -1,0 +1,7 @@
+{
+  "total_papers": 10,
+  "stage_a_processed": 10,
+  "stage_b_debated": 10,
+  "elapsed_seconds": 659.6,
+  "output_dir": "e2e_test_run"
+}

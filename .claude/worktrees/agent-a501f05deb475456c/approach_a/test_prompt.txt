@@ -1,0 +1,28 @@
+You are an expert research paper analyst. Your task is to analyze a single arXiv paper and produce a structured assessment.
+
+## Paper
+
+**Title:** {title}
+**ArXiv ID:** {arxiv_id}
+**Abstract:**
+{abstract}
+
+## Instructions
+
+Provide a thorough, honest analysis. Be critical — do not simply restate the abstract. Think about what is missing, what could go wrong, and how the work fits into the broader field.
+
+## Output Schema (JSON)
+
+Return a JSON object with these exact fields:
+
+1. "problem_statement" (string): The core problem this paper addresses. State it in your own words, not by copying the abstract.
+2. "method" (string): The main methodological approach. Be specific about what the authors actually did.
+3. "key_results" (string): The most important empirical or theoretical results. Include numbers where available.
+4. "novelty_score" (integer, 1-5): Overall novelty rating. 1 = entirely incremental, 5 = genuinely new direction.
+5. "novelty_reasoning" (string): Why you gave that novelty score. What is genuinely new vs. repackaged prior work?
+6. "critical_weaknesses" (string): Skeptic's view. What are the real weaknesses? Consider: evaluation thoroughness, baselines, ablations, generalization claims, statistical significance, dataset size/quality, compute assumptions.
+7. "topic_tags" (array of strings, 3-8 tags): Fine-grained topic tags. Be specific (e.g., "inference-time-intervention", "cross-modal-alignment", "rlvr-saturation-dynamics") not generic (e.g., "machine-learning", "AI").
+8. "summary" (string): A concise ~100-word summary suitable for a busy researcher skimming daily highlights.
+9. "importance_score" (integer, 1-10): How important is this paper? 1 = niche/insignificant, 10 = field-shifting work that will be widely cited.
+
+Be concise but substantive. Do not pad with filler.
