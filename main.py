@@ -197,7 +197,12 @@ def run_agent(images, txt_path, pdf_path, max_steps=10):
                     f"Analyze this paper thoroughly using your tools.\n"
                     f"- PDF path (for get_toc): {pdf_path}\n"
                     f"- Text file path (for read_file/grep_file): {txt_path}\n\n"
-                    f"Start with get_toc to understand the structure, then read key sections, then write your full analysis ending with Score: X/10"
+                    f"Start with get_toc to understand the structure, then read key sections.\n\n"
+                    f"Write your analysis in this exact order:\n"
+                    f"1. Problem\n2. Method\n3. Results\n4. Novelty\n5. Critique\n"
+                    f"6. Score: X/10  ← write this BEFORE verdict\n"
+                    f"7. Verdict (one sentence)\n\n"
+                    f"Be concise in each section. Do not exceed 300 words per section."
                 )}
             ] + images
         }
@@ -210,7 +215,7 @@ def run_agent(images, txt_path, pdf_path, max_steps=10):
             tools=TOOLS,
             tool_choice="auto",
             temperature=0.7,
-            max_tokens=1500,
+            max_tokens=10000,
             extra_body={"chat_template_kwargs": {"enable_thinking": False}},
         )
 
